@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fashion Classifier</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>Fashion Image Classifier</h1>
+
+    <!-- Upload image from file -->
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="image" accept="image/*" required>
+      <button type="submit">Upload and Predict</button>
+    </form>
+
+    <hr>
+
+    <!-- Webcam section -->
+    <h3>Capture from Webcam</h3>
+    <video id="video" width="320" height="240" autoplay></video>
+    <br>
+    <button id="capture">Capture</button>
+    <canvas id="canvas" width="64" height="64" style="display: none;"></canvas>
+
+    <!-- Hidden form to submit captured image -->
+    <form id="capture-form" method="POST" enctype="multipart/form-data">
+      <input type="file" name="image" id="capture-image" style="display: none;">
+    </form>
+
+    {% if prediction %}
+      <h3>Prediction: {{ prediction }}</h3>
+      <img src="{{ image }}" width="200">
+    {% endif %}
+  </div>
+
+  <script>
+    // Access webcam
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const captureButton = document.getElementById("capture");
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => console.error("Camera access denied:", err));
+
+    captureButton.addEventListener("click", () => {
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(blob => {
+        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+        const container = new DataTransfer();
+        container.items.add(file);
+
+        const input = document.getElementById("capture-image");
+        input.files = container.files;
+
+        document.getElementById("capture-form").submit();
+      }, "image/jpeg");
+    });
+  </script>
+</body>
+</html>
